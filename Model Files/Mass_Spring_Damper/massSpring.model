@@ -1,0 +1,55 @@
+hybrid reachability
+{
+ state var x, v, t  
+
+ setting
+ {
+  fixed steps 0.01
+  time 30
+  remainder estimation 1e-7
+  identity precondition
+  gnuplot octagon t,x
+  adaptive orders { min 2 , max 5 }
+  cutoff 1e-15
+  precision 53
+  output Mass_Spring_Damper
+  max jumps 0
+  print on
+ }
+ 
+ modes
+ {
+  operating
+  {
+   nonpoly ode
+   {
+    x' = v
+    v' = (-((2)*v) - ((8)*x)) / 2
+    t' = 1
+   }
+   
+   inv
+   {
+    t <= 6 
+   }
+  }
+ }
+  
+ jumps
+ {
+  
+ }
+ 
+ init
+ {
+  operating
+  {
+   x in [1, 1.001]
+   v in [2, 2.0001]  
+   t in [0, 0.01]
+  }
+ }
+  
+}
+
+

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Global Declarations
+clock x;
+int[0,1] paymentSuccessful = 0;
+clock userLocalClock;
+int[0,1] paymentMethod = 0; // 0 for Cash, 1 for Card
+chan selectTicket, payCash, payCard, issueTicket, printReceipt, cancel, choosePaymentMethod;
+</declaration>
+	<template>
+		<name>TVM</name>
+		<declaration>// Local Declarations for TVM
+clock localClock;
+</declaration>
+		<location id="id0" x="0" y="0">
+			<name x="-50" y="-25">Idle</name>
+		</location>
+		<location id="id1" x="144" y="-102">
+			<name x="94" y="-127">SelectTicket</name>
+		</location>
+		<location id="id2" x="300" y="0">
+			<name x="323" y="-17">ChoosePaymentMethod</name>
+		</location>
+		<location id="id3" x="300" y="100">
+			<name x="250" y="75">Payment</name>
+		</location>
+		<location id="id4" x="153" y="127">
+			<name x="103" y="102">IssueTicket</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id5">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-8" y="-85">selectTicket?</label>
+		</transition>
+		<transition id="id6">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="212" y="-85">choosePaymentMethod?</label>
+		</transition>
+		<transition id="id7">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="391" y="42">payCash?</label>
+			<label kind="assignment" x="320" y="30">paymentMethod = 0</label>
+		</transition>
+		<transition id="id8">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="340" y="68">payCard?</label>
+			<label kind="assignment" x="320" y="90">paymentMethod = 1</label>
+		</transition>
+		<transition id="id9">
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="246" y="119">paymentSuccessful == 1</label>
+			<label kind="synchronisation" x="246" y="51">issueTicket?</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="127" y="0">cancel?</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id4"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-51" y="59">printReceipt?</label>
+		</transition>
+	</template>
+	<template>
+		<name>User</name>
+		<location id="id12" x="0" y="0">
+			<name x="-50" y="-25">Start</name>
+		</location>
+		<location id="id13" x="153" y="-127">
+			<name x="103" y="-152">ChoosingTicket</name>
+		</location>
+		<location id="id14" x="300" y="-100">
+			<name x="250" y="-125">ChoosingPaymentMethod</name>
+		</location>
+		<location id="id15" x="300" y="0">
+			<name x="331" y="25">MakingPayment</name>
+		</location>
+		<location id="id16" x="161" y="153">
+			<name x="111" y="128">CollectingTicket</name>
+		</location>
+		<init ref="id12"/>
+		<transition id="id17">
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="-17" y="-102">selectTicket!</label>
+		</transition>
+		<transition id="id18">
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="127" y="-85">choosePaymentMethod!</label>
+		</transition>
+		<transition id="id19">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="guard" x="320" y="-50">userLocalClock &gt;= 5</label>
+			<label kind="synchronisation" x="345" y="-75">payCash!</label>
+			<label kind="assignment" x="310" y="-100">paymentSuccessful = 1, userLocalClock = 0</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="guard" x="320" y="-20">userLocalClock &gt;= 5</label>
+			<label kind="synchronisation" x="345" y="5">payCard!</label>
+			<label kind="assignment" x="323" y="51">paymentSuccessful = 1, userLocalClock = 0</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="221" y="85">issueTicket!</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id15"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="127" y="-25">cancel!</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id16"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-34" y="76">printReceipt!</label>
+		</transition>
+	</template>
+	<system>// System Declarations
+TVM_Instance = TVM();
+User_Instance = User();
+system TVM_Instance, User_Instance;
+</system>
+	<queries>
+		<query>
+			<formula>A[] (TVM_Instance.IssueTicket imply paymentSuccessful == 1)
+</formula>
+			<comment>This query checks whether a ticket is only issued when the payment has been successfully processed.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:34:19 -0500">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not deadlock
+
+</formula>
+			<comment>This query checks if the system is free from deadlocks.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:35:32 -0500">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; TVM_Instance.IssueTicket
+
+</formula>
+			<comment>This query checks if the system can eventually reach a state where a ticket is issued.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:36:43 -0500">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not (TVM_Instance.IssueTicket and paymentSuccessful == 0)
+</formula>
+			<comment>This ensures that a ticket is not issued without successful payment.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:37:14 -0500">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (paymentMethod == 1 and TVM_Instance.IssueTicket)
+
+</formula>
+			<comment>This query verifies if selecting the card payment method eventually leads to ticket issuance.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:37:52 -0500">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (paymentMethod == 0 imply paymentSuccessful &lt;= 1)
+</formula>
+			<comment>This query ensures that the choice of payment method (cash or card) correctly influences the payment success.</comment>
+			<result outcome="success" type="quality" timestamp="2023-12-10 14:41:00 -0500">
+			</result>
+		</query>
+	</queries>
+</nta>
